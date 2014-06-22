@@ -1,0 +1,18 @@
+<div class="box box-solid box-<% if (state.success) { %>success<% } else { %>danger<% } %>">
+    <div class="box-header">
+        <i class="ion ion-clipboard"></i>
+        <h3 class="box-title">py.test @wip</h3>
+        <div class="box-tools pull-right">
+        </div>
+    </div><!-- /.box-header -->
+    <div class="box-body">
+      <b>Last file changed:</b> <%- state.filename %>
+      <div class="box box-solid">
+        <div class="box-body" style="overflow:auto;">
+          <%= state.differences %>
+        </div><!-- /.box-body -->
+      </div>
+    </div><!-- /.box-body -->
+    <div class="box-footer clearfix no-border">
+    </div>
+</div><!-- /.box -->
