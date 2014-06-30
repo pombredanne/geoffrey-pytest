@@ -11,7 +11,6 @@ $(function() {
    });
 
    var WipTestApp = Backbone.View.extend({
-     el: "#row2",
 
      initialize: function() {
        var this_ = this;
@@ -19,7 +18,7 @@ $(function() {
 
        $.get("/plugins/pytest/wip-widget.html", function(template){
          this_.template = _.template(template);
-       }).done(function() { this_.render() });
+       }).done(function() { this_.render();window.app.registerWidget(this_); });
 
        window.app.subscribe(
            'pytest',
@@ -30,12 +29,12 @@ $(function() {
 
        loadCSS("/plugins/pytest/wip-widget.css");
      },
- 
-     render: function() { 
+
+     render: function() {
        this.$el.html(this.template({'state': this.model.toJSON()}));
 
        return this;
-     } 
+     }
 
    });
 
