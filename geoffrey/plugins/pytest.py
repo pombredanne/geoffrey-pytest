@@ -40,21 +40,29 @@ class Pytest(plugin.GeoffreyPlugin):
         while True:
             event = yield from events.get()
 
-            exitcode, stdout, stderr = yield from execute(
-                pytest_path, "-r", "fesxX", "-v", "-m", wip_mark, tests_path)
+            yield from self.hub.put(self.new_event(key="wip_tests_status",
+                                               status="running"))
 
-            log_event = self.new_event(key="wip_tests_log", status=exitcode,
-                                       stdout=stdout, stderr=stderr)
-            yield from self.hub.put(log_event)
+            exitcode, stdout, stderr = yield from execute(
+                pytest_path, "-r", "fesxX", "-x", "-v", "-m", wip_mark, tests_path)
+
+            if exitcode == 0:
+                status = "passed"
+            else:
+                status = "failed"
+
+            yield from self.hub.put(self.new_event(key="wip_tests_status",
+                                               status=status))
 
             if last_wip_status != exitcode:
                 status_change_filename = event.key
                 status_change_differences = event.differences
                 last_wip_status = exitcode
 
-            success = (exitcode==0)
+            success = (exitcode == 0)
 
             state = self.new_state(key="wip_tests", success=success,
                                    filename=status_change_filename,
-                                   differences=status_change_differences)
+                                   differences=status_change_differences,
+                                   status=status)
             yield from self.hub.put(state)

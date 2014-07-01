@@ -1,8 +1,9 @@
-<div class="box box-solid box-<% if (state.success) { %>success<% } else { %>danger<% } %>">
+<div class="box box-primary">
     <div class="box-header">
         <i class="ion ion-clipboard"></i>
         <h3 class="box-title">py.test @wip</h3>
         <div class="box-tools pull-right">
+          <button id="wip-status" class="btn <%- btnColor %> ladda-button" data-style="expand-left"><span class="ladda-label" id="wip-status-message"><%- btnText %></span></button>
         </div>
     </div><!-- /.box-header -->
     <div class="box-body">
