@@ -31,8 +31,8 @@ $(function() {
      },
 
      render: function() {
+       this.$el.attr("data-ss-colspan", "4");
        this.$el.html(this.template({'state': this.model.toJSON()}));
-
        return this;
      }
 
