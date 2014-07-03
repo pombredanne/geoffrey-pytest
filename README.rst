@@ -12,10 +12,17 @@ geoffrey-pytest
         :target: https://pypi.python.org/pypi/geoffrey-pytest
 
 
-Geoffrey pytest plugin runner.
+Geoffrey pytest plugin runner: http://pytest.org/latest/
 
 * Free software: GPLv3
 * Documentation: http://geoffrey-pytest.readthedocs.org.
+
+
+Configuration
+-------------
+
+To correctly use this plugin you must define the variable *pytest_path* in the plugin's section of your project
+
 
 Features
 --------
