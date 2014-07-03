@@ -4,16 +4,87 @@
         <h3 class="box-title">py.test @wip</h3>
         <div class="box-tools pull-right">
           <button id="wip-status" class="btn <%- btnColor %> ladda-button" data-style="expand-left"><span class="ladda-label" id="wip-status-message"><%- btnText %></span></button>
+          <% if (state.differences) { %>
+          <button id="wip-changes" class="btn btn-primary" data-toggle="modal" data-target="#wip-changes-dialog"><i class="fa fa-exchange"></i> Changes</button>
+          <% } else { %>
+          <button id="wip-changes" class="btn btn-primary disabled"><i class="fa fa-exchange"></i> Changes</button>
+          <% } %>
         </div>
     </div><!-- /.box-header -->
     <div class="box-body">
-      <b>Last file changed:</b> <%- state.filename %>
-      <div class="box box-solid">
-        <div class="box-body" style="overflow:auto;">
-          <%= state.differences %>
-        </div><!-- /.box-body -->
-      </div>
+      <table class="table table-condensed">
+        <tr>
+          <th>Status</th>
+          <th>File</th>
+          <th>Class</th>
+          <th>Function</th>
+          <th></th>
+        </tr>
+        <% _.each(state.details, function(det, idx) { %>
+        <tr>
+          <% if (det.result == ".") { %>
+          <th><span class="label label-success">passed</span></th>
+          <% } else if (det.result == "F") { %>
+          <th><span class="label label-danger">failed</span></th>
+          <% } else if (det.result == "S") { %>
+          <th><span class="label label-warning">skipped</span></th>
+          <% } else { %>
+          <th><span class="label label-default"><%- det.result %></span></th>
+          <% } %>
+          <th><%- det.file %></th>
+          <th><%- det.class %></th>
+          <th><%- det.function %></th>
+          <% if (det.message) { %>
+          <th><i style="cursor: pointer;" class="fa fa-info" data-toggle="modal" data-target="#wip-testmsg-dialog<%- idx %>"></i></th>
+          <% } else { %>
+          <th></th>
+          <% }%>
+        </tr>
+        <% }); %>
+      </table>
     </div><!-- /.box-body -->
     <div class="box-footer clearfix no-border">
     </div>
 </div><!-- /.box -->
+
+<!-- modals wip error details -->
+
+<% _.each(state.details, function(det, idx) { %>
+<% if (det.message) { %>
+  <div class="modal fade" id="wip-testmsg-dialog<%- idx %>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">Failed test information</h4>
+        </div>
+        <div class="modal-body">
+        <pre><%- det.message %></pre>
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+<% }); %>
+
+<!-- modals wip changes -->
+<div class="modal fade" id="wip-changes-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width: 80%">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Changes that toggle status</h4>
+      </div>
+      <div class="modal-body">
+          <strong>File:</strong> <%- state.filename %>
+        <div style="overflow: auto; align: center;">
+          <%= state.differences %>
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>

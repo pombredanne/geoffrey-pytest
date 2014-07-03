@@ -9,6 +9,7 @@ $(function() {
          this.set("success", data.value.success);
          this.set("differences", data.value.differences);
          this.set("status", data.value.status);
+         this.set("details", data.value.details);
      },
 
      parse: function(response, options) {
@@ -17,6 +18,7 @@ $(function() {
          this.set("success", response[0].value.success);
          this.set("differences", response[0].value.differences);
          this.set("status", response[0].value.status);
+         this.set("details", response[0].value.details);
        }
 
      }
@@ -53,7 +55,7 @@ $(function() {
             'plugin': 'pytest',
             'type': 'custom',
             'key': 'wip_tests_status'},
-           function(data) { this_.toggleStatus(data) });
+           function(data) { this_.toggleStatus(data.value.status) });
        loadCSS("/plugins/pytest/wip-widget.css");
      },
 
@@ -77,40 +79,46 @@ $(function() {
            btnText = "unknown";
            break;
        }
+
+       this.toggleStatus(state.status);
        this.$el.html(this.template({
          'state': state,
          'btnColor': btnColor,
          'btnText': btnText}));
 
+       this.ladda = undefined;
+
        return this;
      },
 
-     toggleStatus: function(data) { 
+     toggleStatus: function(status) { 
          var button = $("#wip-status");
-         if (button) {
-             var l = Ladda.create(button[0]);
+         if (button[0]) {
+             if (!this.ladda) {
+               this.ladda = Ladda.create(button[0]);
+             }
 
-             $("#wip-status-message").html(data.value.status);
+             $("#wip-status-message").html(status);
 
              button.removeClass("btn-success");
              button.removeClass("btn-danger");
              button.removeClass("btn-warning");
-             switch (data.value.status) {
+             switch (status) {
                case "running":
                  button.addClass("btn-warning");
-                 l.start();
+                 this.ladda.start();
                  break;
                case "passed":
                  button.addClass("btn-success");
-                 l.stop();
+                 this.ladda.stop();
                  break;
                case "failed":
                  button.addClass("btn-danger");
-                 l.stop();
+                 this.ladda.stop();
                  break;
                case "errored":
                  btnColor = ""
-                 l.stop();
+                 this.ladda.stop();
                  break;
              }
          }
