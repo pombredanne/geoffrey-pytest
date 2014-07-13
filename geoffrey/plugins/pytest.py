@@ -3,10 +3,13 @@ import asyncio
 import logging
 import re
 import tempfile
+import subprocess
+
+from collections import defaultdict
 
 from geoffrey import plugin
 from geoffrey.data import EventType
-from geoffrey.utils import execute
+from geoffrey.utils import execute, jsonencoder
 from geoffrey.subscription import subscription
 
 RESULT_REGEX = re.compile(
@@ -23,6 +26,14 @@ class Pytest(plugin.GeoffreyPlugin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.modified_files = {}
+
+    def configure_app(self):
+        self.app.route('/tests', callback=self._get_tests_state)
+
+    def _get_tests_state(self):
+        from geoffrey.data import datakey
+        criteria = datakey(key='pytest-tests')
+        return jsonencoder.encode([states.serializable() for states in self.hub.get_states(criteria)])
 
     @staticmethod
     def parse_result_file(content):
@@ -48,6 +59,19 @@ class Pytest(plugin.GeoffreyPlugin):
         return results
 
     @subscription
+    def modified_testfiles(self, event):
+        """
+        Modified python test files.
+
+        """
+        tests_path = self.config.get(self._section_name, "tests_path")
+        return (self.project.name == event.project and
+                event.plugin == "filecontent" and
+                event.key.endswith('.py') and
+                event.key.startswith(tests_path) and
+                event.type in (EventType.created, EventType.modified))
+
+    @subscription
     def modified_pyfiles(self, event):
         """
         Modified python files.
@@ -57,6 +81,35 @@ class Pytest(plugin.GeoffreyPlugin):
                 event.plugin == "filecontent" and
                 event.key.endswith('.py') and
                 event.type in (EventType.created, EventType.modified))
+
+    @asyncio.coroutine
+    def get_tests(self, events:"modified_testfiles") -> plugin.Task:
+        pytest_path = self.config.get(self._section_name, "pytest_path")
+        tests_path = self.config.get(self._section_name, "tests_path")
+
+        while True:
+            event = yield from events.get()
+            exitcode, stdout, stderr = yield from execute(pytest_path,
+                                                          "--collect-only",
+                                                          tests_path)
+            data = []
+            current_module = None
+            current_class = None
+            content = stdout.decode('utf-8')
+            for line in stdout.splitlines():
+                line = line.strip().decode('utf-8')
+                if line.startswith('<'):
+                   datatype, key, _ = line.split("'")
+
+                   if datatype[1:-1] == 'Module':
+                       current_module = key
+                       current_class = None
+                   elif datatype[1:-1] == 'UnitTestCase':
+                       current_class = key
+                   else:
+                       data.append({'module': current_module, 'class': current_class, 'function': key})
+            state = self.new_state(key='pytest-tests', data=data, task='get_tests')
+            yield from self.hub.put(state)
 
     @asyncio.coroutine
     def wip_tests(self, events:"modified_pyfiles") -> plugin.Task:
@@ -74,6 +127,7 @@ class Pytest(plugin.GeoffreyPlugin):
 
         while True:
             event = yield from events.get()
+            self.log.critical("Event received in plugin `pytest`")
 
             yield from self.hub.put(self.new_event(key="wip_tests_status",
                                                status="running"))
@@ -110,6 +164,8 @@ class Pytest(plugin.GeoffreyPlugin):
                                    filename=status_change_filename,
                                    differences=status_change_differences,
                                    status=status,
-                                   details=details)
+                                   details=details,
+                                   task='wip_tests'
+                                  )
 
             yield from self.hub.put(state)
