@@ -13,7 +13,7 @@ from geoffrey.utils import execute, jsonencoder
 from geoffrey.subscription import subscription
 
 RESULT_REGEX = re.compile(
-    r'^(?P<result>\S)\s'
+    r'^(?:(?P<result>\S)\s)?'
     r'(?P<file>.*?)::'
     r'(?:(?P<class>.*?)::)?'
     r'(?P<function>.*?)$')
