@@ -1,1 +1,4 @@
-graft geoffrey/plugins/todo
+include *.txt
+include *.rst
+graft geoffreyplugins/pytest
+recursive-exclude geoffreyplugins *.pyc *__pycache__*
