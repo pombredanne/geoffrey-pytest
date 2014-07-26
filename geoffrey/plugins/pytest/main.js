@@ -60,7 +60,7 @@ $(function() {
      },
 
      render: function() {
-       this.$el.attr("data-ss-colspan", "3");
+       this.$el.attr("data-ss-colspan", "4");
 
        var state = this.model.toJSON();
        var btnColor = "";
